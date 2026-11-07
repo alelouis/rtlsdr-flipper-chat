@@ -1,10 +1,13 @@
-"""flipcom-chat: chat with the Flipper Zero's built-in `subghz chat`, receive it with an RTL-SDR.
+"""flipchat-radio: the engine of the flipchat app. It drives the hardware: sends through a
+Flipper Zero's built-in `subghz chat`, and receives that chat with an RTL-SDR dongle.
 
-    flipcom-chat send                    # type lines; each is sent as soon as you press Enter
-    flipcom-chat listen                  # live RTL-SDR receiver for Flipper chat packets
-    flipcom-chat listen --file cap.cu8   # decode a recording (rtl_sdr ... cap.cu8)
+Most people run the flipchat app, which runs this in the background. It also works alone:
 
-With --json, both print one JSON event per line on stdout (used by the flipchat app):
+    flipchat-radio send                    # type lines; each is sent as soon as you press Enter
+    flipchat-radio listen                  # live RTL-SDR receiver for Flipper chat packets
+    flipchat-radio listen --file cap.cu8   # decode a recording (rtl_sdr ... cap.cu8)
+
+With --json, both print one JSON event per line on stdout (what flipchat reads):
     listen: listening, line            send: ready, sent, heard
 """
 

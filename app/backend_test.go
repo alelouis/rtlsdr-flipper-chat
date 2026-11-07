@@ -10,10 +10,10 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// script writes an executable shell script standing in for `flipcom-chat`.
+// script writes an executable shell script standing in for `flipchat-radio`.
 func script(t *testing.T, body string) string {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), "fake-flipcom-chat")
+	path := filepath.Join(t.TempDir(), "fake-flipchat-radio")
 	if err := os.WriteFile(path, []byte("#!/bin/sh\n"+body), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -132,29 +132,29 @@ exit 1
 }
 
 func TestStartBackendReportsAMissingProgram(t *testing.T) {
-	if _, err := startBackend(sdr, 1, []string{"/nonexistent/flipcom-chat"}, make(chan tea.Msg)); err == nil {
+	if _, err := startBackend(sdr, 1, []string{"/nonexistent/flipchat-radio"}, make(chan tea.Msg)); err == nil {
 		t.Error("no error for a missing program")
 	}
 }
 
-func TestPythonCommandFindsTheProjectVenv(t *testing.T) {
+func TestRadioCommandFindsTheProjectVenv(t *testing.T) {
 	root := t.TempDir()
-	os.WriteFile(filepath.Join(root, "pyproject.toml"), []byte("[project]\nname = \"flipcom-chat\"\n"), 0o644)
-	exe := filepath.Join(root, ".venv", "bin", "flipcom-chat")
+	os.WriteFile(filepath.Join(root, "pyproject.toml"), []byte("[project]\nname = \"flipchat-radio\"\n"), 0o644)
+	exe := filepath.Join(root, ".venv", "bin", "flipchat-radio")
 	os.MkdirAll(filepath.Dir(exe), 0o755)
 	os.WriteFile(exe, []byte("#!/bin/sh\n"), 0o755)
 
-	sub := filepath.Join(root, "tui")
+	sub := filepath.Join(root, "app")
 	os.Mkdir(sub, 0o755)
 	t.Chdir(sub) // found by walking up from the working directory
-	got, err := pythonCommand("")
+	got, err := radioCommand("")
 	if err != nil || len(got) != 1 || got[0] != exe {
-		t.Errorf("pythonCommand(\"\") = %v, %v; want [%s]", got, err, exe)
+		t.Errorf("radioCommand(\"\") = %v, %v; want [%s]", got, err, exe)
 	}
 
 	t.Chdir(t.TempDir()) // or given explicitly
-	if got, err := pythonCommand(root); err != nil || got[0] != exe {
-		t.Errorf("pythonCommand(root) = %v, %v", got, err)
+	if got, err := radioCommand(root); err != nil || got[0] != exe {
+		t.Errorf("radioCommand(root) = %v, %v", got, err)
 	}
 }
 
@@ -167,21 +167,21 @@ func TestFindProjectIgnoresOtherPythonProjects(t *testing.T) {
 	}
 }
 
-func TestPythonCommandFallsBackToPath(t *testing.T) {
+func TestRadioCommandFallsBackToPath(t *testing.T) {
 	bin := t.TempDir()
-	exe := filepath.Join(bin, "flipcom-chat")
+	exe := filepath.Join(bin, "flipchat-radio")
 	os.WriteFile(exe, []byte("#!/bin/sh\n"), 0o755)
 	t.Setenv("PATH", bin)
-	t.Chdir(t.TempDir()) // outside any clone: `uv tool install` puts flipcom-chat on the PATH
-	if got, err := pythonCommand(""); err != nil || len(got) != 1 || got[0] != exe {
-		t.Errorf("pythonCommand(\"\") = %v, %v; want [%s]", got, err, exe)
+	t.Chdir(t.TempDir()) // outside any clone: `uv tool install` puts flipchat-radio on the PATH
+	if got, err := radioCommand(""); err != nil || len(got) != 1 || got[0] != exe {
+		t.Errorf("radioCommand(\"\") = %v, %v; want [%s]", got, err, exe)
 	}
 }
 
-func TestPythonCommandExplainsHowToInstall(t *testing.T) {
+func TestRadioCommandExplainsHowToInstall(t *testing.T) {
 	t.Setenv("PATH", t.TempDir())
 	t.Chdir(t.TempDir())
-	_, err := pythonCommand("")
+	_, err := radioCommand("")
 	if err == nil || !strings.Contains(err.Error(), "uv tool install") {
 		t.Errorf("err = %v, want install instructions", err)
 	}

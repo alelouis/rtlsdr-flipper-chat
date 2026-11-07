@@ -6,8 +6,8 @@ import time
 import pytest
 from sim import FakeFlipperLink, chat_line, chat_packets, gfsk_cu8
 
-from flipcom_chat import cli, flipper
-from flipcom_chat.flipper import Flipper
+from flipchat_radio import cli, flipper
+from flipchat_radio.flipper import Flipper
 
 
 def events(text: str) -> list[dict]:

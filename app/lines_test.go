@@ -27,16 +27,16 @@ func TestSplitLine(t *testing.T) {
 }
 
 func TestArgvSender(t *testing.T) {
-	cfg := config{freqMHz: 433.92, port: "/dev/x", device: 1, python: []string{"py", "-m"}}
-	want := []string{"py", "-m", "send", "--json", "-f", "433920000", "--device", "1", "--port", "/dev/x"}
+	cfg := config{freqMHz: 433.92, port: "/dev/x", device: 1, radio: []string{"radio", "-x"}}
+	want := []string{"radio", "-x", "send", "--json", "-f", "433920000", "--device", "1", "--port", "/dev/x"}
 	if got := cfg.argv(sender); !slices.Equal(got, want) {
 		t.Errorf("argv(sender) = %v, want %v", got, want)
 	}
 }
 
 func TestArgvListener(t *testing.T) {
-	cfg := config{freqMHz: 315, gain: "20", python: []string{"flipcom-chat"}}
-	want := []string{"flipcom-chat", "listen", "--json", "-f", "315000000", "-g", "20"}
+	cfg := config{freqMHz: 315, gain: "20", radio: []string{"flipchat-radio"}}
+	want := []string{"flipchat-radio", "listen", "--json", "-f", "315000000", "-g", "20"}
 	if got := cfg.argv(listener); !slices.Equal(got, want) {
 		t.Errorf("argv(listener) = %v, want %v", got, want)
 	}
@@ -46,10 +46,10 @@ func TestArgvListener(t *testing.T) {
 	}
 }
 
-func TestArgvDoesNotShareThePythonSlice(t *testing.T) {
-	py := make([]string, 1, 10)
-	py[0] = "flipcom-chat"
-	cfg := config{freqMHz: 433.92, python: py}
+func TestArgvDoesNotShareTheRadioSlice(t *testing.T) {
+	radio := make([]string, 1, 10)
+	radio[0] = "flipchat-radio"
+	cfg := config{freqMHz: 433.92, radio: radio}
 	a, b := cfg.argv(sender), cfg.argv(listener)
 	if a[1] != "send" || b[1] != "listen" {
 		t.Errorf("argv calls overwrote each other: %v / %v", a, b)

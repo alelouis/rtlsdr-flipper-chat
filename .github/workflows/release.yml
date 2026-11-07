@@ -16,8 +16,8 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - uses: actions/setup-go@v5
         with:
-          go-version-file: tui/go.mod
-          cache-dependency-path: tui/go.sum
+          go-version-file: app/go.mod
+          cache-dependency-path: app/go.sum
 
       - name: Tag matches the version in pyproject.toml
         run: |
@@ -30,7 +30,7 @@ jobs:
         run: |
           uv sync
           uv run pytest -q
-          (cd tui && go test -race ./...)
+          (cd app && go test -race ./...)
 
       - name: Build
         run: scripts/build-release.sh "$GITHUB_REF_NAME"
@@ -42,21 +42,23 @@ jobs:
           cat > notes.md <<NOTES
           ## Install
 
-          **1. The Python side** (the radio receiver and the Flipper driver):
+          On each computer (macOS or Linux):
+
+          **1. The engine**, \`flipchat-radio\` (needs [uv](https://docs.astral.sh/uv/)):
 
           \`\`\`bash
           uv tool install git+https://github.com/${GITHUB_REPOSITORY}@${GITHUB_REF_NAME}
           \`\`\`
 
-          **2. The app**: \`flipchat\` for your system (\`darwin\` = macOS; \`arm64\` = Apple Silicon / ARM, \`amd64\` = Intel / AMD):
+          **2. The app**, \`flipchat\`, for your system (\`darwin\` = macOS; \`arm64\` = Apple Silicon / ARM, \`amd64\` = Intel / AMD):
 
           \`\`\`bash
           curl -fsSL https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/flipchat_<os>_<arch>.tar.gz | tar -xz
           ./flipchat_<os>_<arch>/flipchat
           \`\`\`
 
-          Also needed: the RTL-SDR drivers (\`brew install librtlsdr\` / \`sudo apt install rtl-sdr\`) on the listener.
-          See the [README](https://github.com/${GITHUB_REPOSITORY}#readme) for the details.
+          The listener also needs the RTL-SDR drivers (\`brew install librtlsdr\` / \`sudo apt install rtl-sdr\`).
+          Full guide: [README](https://github.com/${GITHUB_REPOSITORY}#readme).
 
           NOTES
           gh release create "$GITHUB_REF_NAME" dist/* \

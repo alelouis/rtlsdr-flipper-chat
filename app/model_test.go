@@ -34,7 +34,7 @@ func (f *fakeLauncher) launch(src source, gen int, argv []string, out chan<- tea
 func newTestModel(t *testing.T, preset *role) (model, *fakeLauncher) {
 	t.Helper()
 	fl := &fakeLauncher{}
-	cfg := config{freqMHz: 433.92, python: []string{"flipcom-chat"}}
+	cfg := config{freqMHz: 433.92, radio: []string{"flipchat-radio"}}
 	m := newModel(cfg, preset, fl.launch)
 	m = update(t, m, tea.WindowSizeMsg{Width: 100, Height: 30})
 	return m, fl

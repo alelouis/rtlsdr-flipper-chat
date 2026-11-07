@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from sim import FS, OFFSET, chat_line, chat_packets, gfsk_cu8
 
-from flipcom_chat.receiver import ChatDemodulator, LineAssembler, crc16_cc1101, cu8_to_iq
+from flipchat_radio.receiver import ChatDemodulator, LineAssembler, crc16_cc1101, cu8_to_iq
 
 
 def decode(cu8: bytes, chunk: int = 65536, fs=FS, offset=OFFSET) -> list[str]:

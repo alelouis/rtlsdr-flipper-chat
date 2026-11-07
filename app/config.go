@@ -30,11 +30,11 @@ type config struct {
 	port    string
 	device  int
 	file    string
-	python  []string
+	radio   []string
 }
 
 func (c config) argv(r role) []string {
-	a := append([]string{}, c.python...)
+	a := append([]string{}, c.radio...)
 	hz := strconv.FormatFloat(c.freqMHz*1e6, 'f', 0, 64)
 	if r == sender {
 		a = append(a, "send", "--json", "-f", hz, "--device", strconv.Itoa(c.device))

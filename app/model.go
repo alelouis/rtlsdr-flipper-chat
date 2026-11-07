@@ -28,7 +28,7 @@ const (
 	finished // a replayed recording ended
 )
 
-// launcher starts the Python side; tests replace it.
+// launcher starts flipchat-radio; tests replace it.
 type launcher func(src source, gen int, argv []string, out chan<- tea.Msg) (*backend, error)
 
 type model struct {
@@ -226,7 +226,7 @@ func (m *model) connect() {
 	m.proc, m.state = proc, starting
 }
 
-// leave stops the Python process, then quits or goes back to the setup screen.
+// leave stops flipchat-radio, then quits or goes back to the setup screen.
 func (m *model) leave(quit bool) tea.Cmd {
 	m.stopping = true
 	proc := m.proc

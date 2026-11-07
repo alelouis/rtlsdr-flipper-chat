@@ -7,7 +7,7 @@ import time
 
 import numpy as np
 
-from flipcom_chat.receiver import BAUD, DEVIATION, MAX_DATA, PREAMBLE, SYNC, crc16_cc1101
+from flipchat_radio.receiver import BAUD, DEVIATION, MAX_DATA, PREAMBLE, SYNC, crc16_cc1101
 
 FS, OFFSET = 1.024e6, 250e3
 

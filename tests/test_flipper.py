@@ -1,8 +1,8 @@
 import pytest
 from sim import FakeFlipperLink
 
-from flipcom_chat import flipper
-from flipcom_chat.flipper import Flipper, is_own_echo
+from flipchat_radio import flipper
+from flipchat_radio.flipper import Flipper, is_own_echo
 
 
 @pytest.fixture(autouse=True)

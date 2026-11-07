@@ -19,13 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: tui
+        working-directory: app
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: tui/go.mod
-          cache-dependency-path: tui/go.sum
+          go-version-file: app/go.mod
+          cache-dependency-path: app/go.sum
       - run: test -z "$(gofmt -l .)"
       - run: go vet ./...
       - run: go test -race ./...

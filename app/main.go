@@ -1,8 +1,8 @@
 // flipchat: a terminal app for the Flipper Zero's Sub-GHz chat.
 //
 // Each computer takes one role: the sender types through a Flipper Zero, the
-// listener reads the chat with an RTL-SDR dongle. The app drives the Python
-// `flipcom-chat send` or `flipcom-chat listen` in the background.
+// listener reads the chat with an RTL-SDR dongle. The hardware is driven by
+// flipchat-radio, a Python engine the app runs in the background.
 package main
 
 import (
@@ -27,7 +27,7 @@ func main() {
 	flag.StringVar(&cfg.file, "file", "", "listener: replay a .cu8 recording instead of the live RTL-SDR")
 	flag.StringVar(&cfg.port, "port", "", "sender: Flipper serial port (default: autodetect)")
 	flag.IntVar(&cfg.device, "device", 0, "sender: Flipper radio, 0 = internal, 1 = external module")
-	flag.StringVar(&project, "project", "", "path to the rtlsdr-flipper-chat folder (default: found automatically)")
+	flag.StringVar(&project, "project", "", "use flipchat-radio from this clone of the repo (default: found automatically)")
 	flag.BoolVar(&showVersion, "version", false, "print the version and exit")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "flipchat: Flipper Zero Sub-GHz chat. One computer sends with a Flipper,\n"+
@@ -58,12 +58,12 @@ func main() {
 		preset = &r
 	}
 
-	py, err := pythonCommand(project)
+	radio, err := radioCommand(project)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "flipchat:", err)
 		os.Exit(1)
 	}
-	cfg.python = py
+	cfg.radio = radio
 
 	if _, err := tea.NewProgram(newModel(cfg, preset, startBackend), tea.WithAltScreen()).Run(); err != nil {
 		fmt.Fprintln(os.Stderr, "flipchat:", err)

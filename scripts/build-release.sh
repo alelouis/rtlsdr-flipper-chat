@@ -12,7 +12,7 @@ for target in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64; do
   os=${target%/*} arch=${target#*/}
   name="flipchat_${os}_${arch}"
   mkdir -p "$dist/$name"
-  (cd "$root/tui" && CGO_ENABLED=0 GOOS=$os GOARCH=$arch \
+  (cd "$root/app" && CGO_ENABLED=0 GOOS=$os GOARCH=$arch \
     go build -trimpath -ldflags "-s -w -X main.version=$version" -o "$dist/$name/flipchat" .)
   cp "$root/LICENSE" "$root/README.md" "$dist/$name/"
   tar -C "$dist" -czf "$dist/$name.tar.gz" "$name"

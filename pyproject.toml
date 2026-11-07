@@ -1,14 +1,14 @@
 [project]
-name = "flipcom-chat"
+name = "flipchat-radio"
 version = "0.1.0"
-description = "Flipper Zero Sub-GHz chat: send with a Flipper, receive with an RTL-SDR dongle"
+description = "Engine of flipchat: Flipper Zero Sub-GHz chat, sent with a Flipper and received with an RTL-SDR"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.26", "pyserial>=3.5"]
 
 [project.scripts]
-flipcom-chat = "flipcom_chat.cli:main"
+flipchat-radio = "flipchat_radio.cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.8"]

@@ -1,4 +1,4 @@
-module flipcom-chat/tui
+module github.com/alelouis/rtlsdr-flipper-chat/app
 
 go 1.24.2
 

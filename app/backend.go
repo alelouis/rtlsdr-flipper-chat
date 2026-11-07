@@ -1,7 +1,7 @@
 package main
 
-// Runs the Python `flipcom-chat listen|send --json` processes and turns their
-// output into Bubble Tea messages.
+// Runs flipchat-radio, the Python engine that drives the hardware
+// (`flipchat-radio send|listen --json`), and turns its output into Bubble Tea messages.
 
 import (
 	"bufio"
@@ -33,7 +33,7 @@ func (s source) String() string {
 	return "Flipper"
 }
 
-// event is one JSON line from the Python side.
+// event is one JSON line from flipchat-radio.
 type event struct {
 	Event  string  `json:"event"` // listening, line (RTL-SDR); ready, sent, heard (Flipper)
 	Text   string  `json:"text"`
@@ -61,7 +61,7 @@ type exitMsg struct {
 	err error
 }
 
-// backend is one running Python process. gen tells a restarted process's
+// backend is one running flipchat-radio process. gen tells a restarted process's
 // messages apart from those of the one it replaced.
 type backend struct {
 	src   source
@@ -159,25 +159,25 @@ func (b *backend) stop(timeout time.Duration) {
 	}
 }
 
-// pythonCommand finds how to run the Python `flipcom-chat`: the project's
+// radioCommand finds how to run flipchat-radio: the clone's
 // .venv first, then `uv run`, then anything on PATH.
-func pythonCommand(project string) ([]string, error) {
+func radioCommand(project string) ([]string, error) {
 	if project == "" {
 		project = findProject()
 	}
 	if project != "" {
-		exe := filepath.Join(project, ".venv", "bin", "flipcom-chat")
+		exe := filepath.Join(project, ".venv", "bin", "flipchat-radio")
 		if _, err := os.Stat(exe); err == nil {
 			return []string{exe}, nil
 		}
 		if uv, err := exec.LookPath("uv"); err == nil {
-			return []string{uv, "run", "--quiet", "--project", project, "flipcom-chat"}, nil
+			return []string{uv, "run", "--quiet", "--project", project, "flipchat-radio"}, nil
 		}
 	}
-	if exe, err := exec.LookPath("flipcom-chat"); err == nil {
+	if exe, err := exec.LookPath("flipchat-radio"); err == nil {
 		return []string{exe}, nil
 	}
-	return nil, fmt.Errorf("can't find flipcom-chat, the Python side of flipchat. Install it with:\n\n" +
+	return nil, fmt.Errorf("can't find flipchat-radio, the engine flipchat needs. Install it with:\n\n" +
 		"    uv tool install git+https://github.com/alelouis/rtlsdr-flipper-chat\n\n" +
 		"or, in a clone of the repo, run `uv sync` (or pass -project /path/to/the/clone)")
 }
@@ -197,7 +197,7 @@ func findProject() string {
 	for _, dir := range starts {
 		for {
 			data, err := os.ReadFile(filepath.Join(dir, "pyproject.toml"))
-			if err == nil && strings.Contains(string(data), `name = "flipcom-chat"`) {
+			if err == nil && strings.Contains(string(data), `name = "flipchat-radio"`) {
 				return dir
 			}
 			parent := filepath.Dir(dir)

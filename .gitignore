@@ -4,6 +4,6 @@ __pycache__/
 .pytest_cache/
 *.cu8
 /flipchat
-/tui/tui
-/tui/flipchat
+/app/app
+/app/flipchat
 /dist/

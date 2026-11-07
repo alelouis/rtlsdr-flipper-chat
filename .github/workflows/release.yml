@@ -1,0 +1,63 @@
+name: Release
+
+# Push a tag to publish a release:  git tag v0.1.0 && git push origin v0.1.0
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: tui/go.mod
+          cache-dependency-path: tui/go.sum
+
+      - name: Tag matches the version in pyproject.toml
+        run: |
+          want="v$(grep -m1 '^version' pyproject.toml | cut -d'"' -f2)"
+          if [ "$GITHUB_REF_NAME" != "$want" ]; then
+            echo "::error::tag $GITHUB_REF_NAME but pyproject.toml says $want"; exit 1
+          fi
+
+      - name: Test
+        run: |
+          uv sync
+          uv run pytest -q
+          (cd tui && go test -race ./...)
+
+      - name: Build
+        run: scripts/build-release.sh "$GITHUB_REF_NAME"
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notes.md <<NOTES
+          ## Install
+
+          **1. The Python side** (the radio receiver and the Flipper driver):
+
+          \`\`\`bash
+          uv tool install git+https://github.com/${GITHUB_REPOSITORY}@${GITHUB_REF_NAME}
+          \`\`\`
+
+          **2. The app**: \`flipchat\` for your system (\`darwin\` = macOS; \`arm64\` = Apple Silicon / ARM, \`amd64\` = Intel / AMD):
+
+          \`\`\`bash
+          curl -fsSL https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/flipchat_<os>_<arch>.tar.gz | tar -xz
+          ./flipchat_<os>_<arch>/flipchat
+          \`\`\`
+
+          Also needed: the RTL-SDR drivers (\`brew install librtlsdr\` / \`sudo apt install rtl-sdr\`) on the listener.
+          See the [README](https://github.com/${GITHUB_REPOSITORY}#readme) for the details.
+
+          NOTES
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "flipchat $GITHUB_REF_NAME" --notes-file notes.md --generate-notes --verify-tag

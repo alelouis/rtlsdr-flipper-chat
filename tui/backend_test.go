@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -163,5 +164,25 @@ func TestFindProjectIgnoresOtherPythonProjects(t *testing.T) {
 	t.Chdir(root)
 	if got := findProject(); got == root {
 		t.Error("took another project's pyproject.toml")
+	}
+}
+
+func TestPythonCommandFallsBackToPath(t *testing.T) {
+	bin := t.TempDir()
+	exe := filepath.Join(bin, "flipcom-chat")
+	os.WriteFile(exe, []byte("#!/bin/sh\n"), 0o755)
+	t.Setenv("PATH", bin)
+	t.Chdir(t.TempDir()) // outside any clone: `uv tool install` puts flipcom-chat on the PATH
+	if got, err := pythonCommand(""); err != nil || len(got) != 1 || got[0] != exe {
+		t.Errorf("pythonCommand(\"\") = %v, %v; want [%s]", got, err, exe)
+	}
+}
+
+func TestPythonCommandExplainsHowToInstall(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+	t.Chdir(t.TempDir())
+	_, err := pythonCommand("")
+	if err == nil || !strings.Contains(err.Error(), "uv tool install") {
+		t.Errorf("err = %v, want install instructions", err)
 	}
 }

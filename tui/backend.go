@@ -177,7 +177,9 @@ func pythonCommand(project string) ([]string, error) {
 	if exe, err := exec.LookPath("flipcom-chat"); err == nil {
 		return []string{exe}, nil
 	}
-	return nil, fmt.Errorf("can't find the Python flipcom-chat: run `uv sync` in the project folder, or pass -project")
+	return nil, fmt.Errorf("can't find flipcom-chat, the Python side of flipchat. Install it with:\n\n" +
+		"    uv tool install git+https://github.com/alelouis/rtlsdr-flipper-chat\n\n" +
+		"or, in a clone of the repo, run `uv sync` (or pass -project /path/to/the/clone)")
 }
 
 // findProject looks for this repo's pyproject.toml above the working directory

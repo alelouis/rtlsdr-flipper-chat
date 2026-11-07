@@ -14,9 +14,13 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// version is set at release build time: -ldflags "-X main.version=v1.2.3".
+var version = "dev"
+
 func main() {
 	var cfg config
 	var project, roleFlag string
+	var showVersion bool
 	flag.StringVar(&roleFlag, "role", "", "skip the setup screen: sender (Flipper) or listener (RTL-SDR)")
 	flag.Float64Var(&cfg.freqMHz, "f", 433.92, "frequency in MHz")
 	flag.StringVar(&cfg.gain, "g", "", "listener: RTL-SDR gain in dB (default: automatic)")
@@ -24,12 +28,17 @@ func main() {
 	flag.StringVar(&cfg.port, "port", "", "sender: Flipper serial port (default: autodetect)")
 	flag.IntVar(&cfg.device, "device", 0, "sender: Flipper radio, 0 = internal, 1 = external module")
 	flag.StringVar(&project, "project", "", "path to the rtlsdr-flipper-chat folder (default: found automatically)")
+	flag.BoolVar(&showVersion, "version", false, "print the version and exit")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "flipchat: Flipper Zero Sub-GHz chat. One computer sends with a Flipper,\n"+
 			"another listens with an RTL-SDR.\n\nUsage: flipchat [options]\n\n")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+	if showVersion {
+		fmt.Println("flipchat", version)
+		return
+	}
 
 	var preset *role
 	switch strings.ToLower(roleFlag) {

@@ -36,7 +36,7 @@ a real session, trimmed.)
 |---|---|
 | **Flipper Zero** | Official firmware (or any fork that keeps `subghz chat`), plugged into the computer over USB |
 | **RTL-SDR dongle** | Any RTL2832U dongle (e.g. RTL-SDR Blog v3/v4) with its antenna |
-| **Computer** | macOS or Linux, with [uv](https://docs.astral.sh/uv/) (Python package manager) and [Go](https://go.dev/dl/) 1.24+ (to build the app) |
+| **Computer** | macOS or Linux, with [uv](https://docs.astral.sh/uv/) (Python package manager) |
 
 The sender needs only the Flipper, the listener only the dongle. Install the project on
 both computers. (Both devices on one computer also works: run `flipchat` twice, once per role.
@@ -44,28 +44,48 @@ That's handy for testing.)
 
 > **Legal:** only transmit on frequencies allowed where you live. 433.92 MHz is a
 > licence-free ISM frequency in Europe (low power, short transmissions). In the US, use
-> 315 MHz (`./flipchat -f 315`). The Flipper's firmware also refuses frequencies that are not
+> 315 MHz (`flipchat -f 315`). The Flipper's firmware also refuses frequencies that are not
 > allowed in its region.
 
 ## Install
 
+No clone and no Go needed: install the Python side with uv, and download the app.
+
 ```bash
-# 1. RTL-SDR drivers (provides rtl_sdr and rtl_test)
+# 1. RTL-SDR drivers, on the listener (provides rtl_sdr and rtl_test)
 brew install librtlsdr          # macOS
 sudo apt install rtl-sdr        # Debian / Ubuntu
 
-# 2. uv and Go, if you don't have them
-brew install uv go              # macOS (Linux: see docs.astral.sh/uv and go.dev/dl)
+# 2. The Python side: the radio receiver and the Flipper driver (needs uv: brew install uv,
+#    or see docs.astral.sh/uv). Puts the `flipcom-chat` command on your PATH.
+uv tool install git+https://github.com/alelouis/rtlsdr-flipper-chat
 
-# 3. This project
+# 3. The app, from the latest release (macOS or Linux, Intel/AMD or ARM)
+os=$(uname -s | tr A-Z a-z); arch=$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/')
+curl -fsSL https://github.com/alelouis/rtlsdr-flipper-chat/releases/latest/download/flipchat_${os}_${arch}.tar.gz | tar -xz
+mv flipchat_${os}_${arch}/flipchat ~/.local/bin/        # or anywhere on your PATH
+flipchat -version
+```
+
+The archives are also on the [releases page](https://github.com/alelouis/rtlsdr-flipper-chat/releases),
+with `SHA256SUMS`. On macOS, a binary downloaded with a browser (not `curl`) is blocked
+as unsigned: run `xattr -d com.apple.quarantine flipchat` once.
+
+To update later: `uv tool upgrade flipcom-chat`, and download the app again.
+
+### From source
+
+```bash
 git clone https://github.com/alelouis/rtlsdr-flipper-chat
 cd rtlsdr-flipper-chat
-uv sync                                   # the Python receiver: creates .venv with numpy and pyserial
-(cd tui && go build -o ../flipchat .)     # the terminal app: builds ./flipchat
-
-# 4. Optional: check everything works, no hardware needed
-uv run pytest -q && (cd tui && go test ./...)
+uv sync                                   # the Python side, in .venv
+(cd tui && go build -o ../flipchat .)     # the app (needs Go 1.24+): builds ./flipchat
+uv run pytest -q && (cd tui && go test ./...)   # optional: all tests, no hardware needed
 ```
+
+Run `./flipchat` from the clone: it uses the clone's `.venv`. To publish a release, bump
+`version` in `pyproject.toml`, then push a matching tag (`git tag v0.2.0 && git push origin v0.2.0`):
+GitHub Actions tests, builds and publishes it.
 
 Check the dongle is detected:
 
@@ -79,10 +99,10 @@ for another tuner). On Linux, if you get `usb_claim_interface error`, run
 
 ## Use it
 
-On each computer, in the project folder:
+On each computer:
 
 ```bash
-./flipchat
+flipchat          # ./flipchat in a clone
 ```
 
 It asks what's plugged into this computer:
@@ -126,27 +146,27 @@ Start with the two devices a few metres apart, then try further away.
 Options skip the setup screen or tune each role:
 
 ```bash
-./flipchat -role sender                   # straight to the sender
-./flipchat -role listener                 # straight to the listener
-./flipchat -f 315                         # frequency in MHz (US: 315)
-./flipchat -role listener -g 20           # fixed RTL-SDR gain in dB (default: automatic)
-./flipchat -role sender -port /dev/ttyACM0   # if the Flipper isn't found automatically
-./flipchat -file capture.cu8              # listener replaying a recording (see below)
+flipchat -role sender                   # straight to the sender
+flipchat -role listener                 # straight to the listener
+flipchat -f 315                         # frequency in MHz (US: 315)
+flipchat -role listener -g 20           # fixed RTL-SDR gain in dB (default: automatic)
+flipchat -role sender -port /dev/ttyACM0   # if the Flipper isn't found automatically
+flipchat -file capture.cu8              # listener replaying a recording (see below)
 ```
 
 `flipchat` is a front end: depending on the role, it runs the Python `flipcom-chat send` or
-`flipcom-chat listen` in the background and reads its events (`--json`). It finds them in the
-project's `.venv`, so keep the binary in the project folder, or pass
-`-project /path/to/rtlsdr-flipper-chat`.
+`flipcom-chat listen` in the background and reads its events (`--json`). It looks for them in
+the clone it runs from (its `.venv`), then on your PATH (`uv tool install`). `-project DIR`
+points it at a clone elsewhere.
 
 ## Without the app: two terminals
 
-The Python commands work on their own too.
+The Python commands work on their own too (in a clone, prefix them with `uv run`).
 
 **Listener's computer (RTL-SDR)**
 
 ```bash
-uv run flipcom-chat listen
+flipcom-chat listen
 ```
 
 It prints `listening for Flipper chat on 433.920 MHz` and waits.
@@ -154,7 +174,7 @@ It prints `listening for Flipper chat on 433.920 MHz` and waits.
 **Sender's computer (Flipper over USB)**
 
 ```bash
-uv run flipcom-chat send
+flipcom-chat send
 ```
 
 Type a line and press **Enter**. It's transmitted immediately and shows up on the
@@ -163,11 +183,11 @@ listener a fraction of a second later. Press **Ctrl+D** to quit.
 ### Options
 
 ```bash
-uv run flipcom-chat listen -g 20             # fixed gain in dB (default: automatic)
-uv run flipcom-chat listen -f 315e6          # another frequency (Hz)
-uv run flipcom-chat listen --packets         # also print every raw packet
-uv run flipcom-chat send -f 315e6            # same frequency on the Flipper side
-uv run flipcom-chat send --port /dev/ttyACM0 # if the Flipper isn't found automatically
+flipcom-chat listen -g 20             # fixed gain in dB (default: automatic)
+flipcom-chat listen -f 315e6          # another frequency (Hz)
+flipcom-chat listen --packets         # also print every raw packet
+flipcom-chat send -f 315e6            # same frequency on the Flipper side
+flipcom-chat send --port /dev/ttyACM0 # if the Flipper isn't found automatically
 ```
 
 `listen` and `send` must use the same frequency.
@@ -209,8 +229,8 @@ You can record raw radio with `rtl_sdr` and decode it later:
 
 ```bash
 rtl_sdr -f 433670000 -s 1024000 capture.cu8    # tuned 250 kHz below 433.92 MHz; Ctrl+C to stop
-uv run flipcom-chat listen --file capture.cu8
-./flipchat -file capture.cu8                   # or replay it in the app, at real speed
+flipcom-chat listen --file capture.cu8
+flipchat -file capture.cu8                   # or replay it in the app, at real speed
 ```
 
 ---
@@ -274,6 +294,7 @@ tui/                         the flipchat terminal app (Go, Bubble Tea)
   view.go       drawing
   backend.go    runs `flipcom-chat send` or `listen --json` and reads its events
   *_test.go     screens driven key by key, and the process plumbing with stand-in scripts
+scripts/build-release.sh     release archives (used by .github/workflows/release.yml)
 ```
 
 With `--json`, the Python commands print one event per line, which is all the app reads:
